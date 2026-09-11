@@ -33,8 +33,18 @@ export function MediaCard({ title, priority = false, onDismiss }: { title: Catal
   useEffect(() => {
     if (!isOpen) return;
 
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    const previousBodyOverflow = document.body.style.overflow;
+
     if (!dialogRef.current?.open) dialogRef.current?.showModal();
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
     closeButtonRef.current?.focus();
+
+    return () => {
+      document.documentElement.style.overflow = previousHtmlOverflow;
+      document.body.style.overflow = previousBodyOverflow;
+    };
   }, [isOpen]);
 
   function closeModal() {
