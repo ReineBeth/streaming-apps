@@ -1,0 +1,16 @@
+.page { min-height: 100vh; max-width: 76rem; margin: 0 auto; padding: 3rem 1.25rem 5rem; }
+.header { margin-bottom: 2rem; }
+.eyebrow { margin-bottom: 0.5rem; color: var(--accent); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+.header h1 { font-size: clamp(2rem, 5vw, 3.5rem); letter-spacing: -0.04em; }
+.header > p:last-child { margin-top: 0.75rem; color: var(--text-muted); line-height: 1.5; }
+.list { display: grid; gap: 0.75rem; }
+.entry { display: grid; grid-template-columns: 5rem 1fr; gap: 1rem; align-items: center; border: 1px solid var(--border); border-radius: 0.75rem; background: var(--surface); padding: 0.75rem; }
+.entry img { width: 5rem; height: 7.5rem; border-radius: 0.4rem; object-fit: cover; }
+.details { display: grid; gap: 0.35rem; }
+.details h2 { font-size: 1.05rem; }
+.details p { color: var(--text-muted); font-size: 0.85rem; }
+.entryType { color: var(--accent) !important; font-size: 0.72rem !important; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.rating { color: var(--foreground) !important; font-weight: 700; }
+.details a { margin-top: 0.25rem; color: var(--accent); font-size: 0.85rem; font-weight: 700; }
+.details a:hover, .details a:focus-visible { color: var(--foreground); text-decoration: underline; text-underline-offset: 0.2em; }
+.empty, .message { padding: 2rem; border: 1px solid var(--border); border-radius: 0.75rem; background: var(--surface); color: var(--text-muted); }

@@ -1,0 +1,8 @@
+.section { max-width: 76rem; margin: 0 auto 3rem; }
+.header { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.header h2 { font-size: clamp(1.2rem, 3vw, 1.6rem); }
+.reloadButton { border: 0; background: transparent; padding: 0; color: var(--accent); cursor: pointer; font: inherit; font-size: 0.85rem; font-weight: 600; }
+.reloadButton:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+@media (min-width: 640px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }

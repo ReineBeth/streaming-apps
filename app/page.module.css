@@ -1,0 +1,19 @@
+.page { min-height: 100vh; padding: 3rem clamp(1rem, 4vw, 4rem) 5rem; }
+.hero, .welcome { max-width: 76rem; margin: 0 auto 3rem; }
+.hero { padding: clamp(1rem, 3vw, 2rem) 0; }
+.welcome { max-width: 48rem; padding: clamp(2rem, 8vw, 6rem) 0; }
+.eyebrow { margin-bottom: 0.75rem; color: var(--accent); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+.hero h1, .welcome h1 { max-width: 48rem; font-size: clamp(2.2rem, 6vw, 4.8rem); letter-spacing: -0.06em; line-height: 0.98; }
+.hero > p:last-child, .welcome > p:not(.eyebrow) { max-width: 38rem; margin-top: 1.25rem; color: var(--text-muted); font-size: 1.05rem; line-height: 1.6; }
+.primaryLink { display: inline-block; margin-top: 2rem; border-radius: 0.4rem; background: var(--accent); padding: 0.75rem 1rem; color: #16110a; font-weight: 800; }
+.section { max-width: 76rem; margin: 0 auto 3rem; }
+.sectionHeader { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.sectionHeader h2 { font-size: clamp(1.2rem, 3vw, 1.6rem); }
+.sectionHeader a { color: var(--accent); font-size: 0.85rem; font-weight: 700; white-space: nowrap; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+@media (min-width: 640px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+
+.sectionHeader a { color: var(--accent); text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 0.2em; transition: color 160ms ease, text-decoration-color 160ms ease; }
+.sectionHeader a:hover, .sectionHeader a:focus-visible { color: var(--foreground); text-decoration-color: currentColor; }
+.primaryLink:hover, .primaryLink:focus-visible { background: #ffd07a; box-shadow: 0 0.35rem 0.9rem rgb(255 189 90 / 22%); transform: translateY(-1px); }

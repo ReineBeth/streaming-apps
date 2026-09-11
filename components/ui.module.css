@@ -1,0 +1,64 @@
+.button {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.button:hover:not(:disabled), .button:focus-visible {
+  transform: translateY(-1px);
+}
+
+.primary {
+  background: var(--accent);
+  color: #16110a;
+}
+
+.primary:hover:not(:disabled), .primary:focus-visible {
+  background: #ffd07a;
+  box-shadow: 0 0.35rem 0.9rem rgb(255 189 90 / 22%);
+}
+
+.secondary {
+  border-color: var(--border);
+  background: transparent;
+  color: var(--foreground);
+}
+
+.secondary:hover:not(:disabled), .secondary:focus-visible {
+  border-color: var(--accent);
+  background: var(--surface-muted);
+  color: var(--accent);
+}
+
+.button:disabled { cursor: not-allowed; opacity: 0.55; }
+
+.link {
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.2em;
+  transition: color 160ms ease, text-decoration-color 160ms ease;
+}
+
+.link:hover, .link:focus-visible {
+  color: var(--foreground);
+  text-decoration-color: currentColor;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button, .link { transition: none; }
+}

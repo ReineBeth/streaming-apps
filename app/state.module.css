@@ -1,0 +1,101 @@
+.page {
+  display: grid;
+  min-height: calc(100vh - 5rem);
+  place-items: center;
+  padding: 3rem 1.25rem 5rem;
+}
+
+.card {
+  width: min(100%, 42rem);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  padding: clamp(1.5rem, 5vw, 2.5rem);
+}
+
+.eyebrow {
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.card h1 {
+  margin-top: 0.6rem;
+  font-size: clamp(1.75rem, 5vw, 3rem);
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+
+.card p:not(.eyebrow) {
+  margin-top: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.action {
+  display: inline-block;
+  margin-top: 1.5rem;
+  border: 0;
+  border-radius: 0.4rem;
+  background: var(--accent);
+  padding: 0.7rem 1rem;
+  color: #16110a;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.action:focus-visible {
+  outline: 2px solid var(--foreground);
+  outline-offset: 3px;
+}
+
+.skeleton {
+  display: grid;
+  gap: 0.75rem;
+  width: min(100%, 76rem);
+}
+
+.skeletonLine,
+.skeletonCard {
+  border-radius: 0.5rem;
+  background: linear-gradient(90deg, var(--surface) 25%, var(--surface-muted) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.skeletonLine {
+  height: 1.2rem;
+  max-width: 24rem;
+}
+
+.skeletonLineShort {
+  max-width: 12rem;
+}
+
+.skeletonGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.skeletonCard {
+  aspect-ratio: 2 / 3;
+}
+
+@keyframes pulse {
+  50% { opacity: 0.55; }
+}
+
+@media (min-width: 640px) {
+  .skeletonGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeletonLine,
+  .skeletonCard { animation: none; }
+}

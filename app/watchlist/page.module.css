@@ -1,0 +1,13 @@
+.page { min-height: 100vh; padding: 3rem clamp(1rem, 4vw, 4rem) 5rem; }
+.header, .grid, .empty { max-width: 76rem; margin-right: auto; margin-left: auto; }
+.header { margin-bottom: 2rem; }
+.eyebrow { margin-bottom: 0.5rem; color: var(--accent); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+.header h1 { font-size: clamp(2rem, 5vw, 3.5rem); letter-spacing: -0.04em; }
+.header > p:last-child { margin-top: 0.75rem; color: var(--text-muted); line-height: 1.5; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.empty, .message { margin-top: 4rem; padding: 2rem; border: 1px solid var(--border); border-radius: 0.75rem; background: var(--surface); }
+.empty h2 { font-size: 1.4rem; }
+.empty p, .message { margin-top: 0.6rem; color: var(--text-muted); line-height: 1.6; }
+.empty a { display: inline-block; margin-top: 1rem; color: var(--accent); font-weight: 700; }
+@media (min-width: 640px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }

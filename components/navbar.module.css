@@ -1,0 +1,28 @@
+.header { position: relative; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; border-bottom: 1px solid var(--border); background: rgb(11 13 18 / 92%); padding: 0.9rem clamp(1rem, 4vw, 4rem); }
+.logo { color: var(--foreground); font-weight: 800; letter-spacing: -0.02em; }
+.list, .mobileList { display: flex; flex-wrap: wrap; gap: 1rem; list-style: none; }
+.list a, .mobileList a { color: var(--text-muted); font-size: 0.85rem; font-weight: 700; transition: color 160ms ease; }
+.list a { position: relative; }
+.list a::after { position: absolute; right: 0; bottom: -0.45rem; left: 0; height: 2px; border-radius: 999px; background: var(--accent); content: ""; opacity: 0; transform: scaleX(0.4); transition: opacity 160ms ease, transform 160ms ease; }
+.list a:hover, .list a:focus-visible, .mobileList a:hover, .mobileList a:focus-visible { color: var(--accent); }
+.list a:hover::after, .list a:focus-visible::after { opacity: 1; transform: scaleX(1); }
+.list a:focus-visible, .logo:focus-visible, .burger:focus-visible, .mobileList a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.burger, .mobileNav, .overlay { display: none; }
+
+@media (max-width: 767px) {
+  .header { align-items: center; }
+  .desktopNav { display: none; }
+  .burger { position: relative; z-index: 32; display: grid; width: 2.75rem; height: 2.75rem; place-items: center; border: 1px solid var(--border); border-radius: 0.5rem; background: var(--surface); padding: 0; color: var(--foreground); cursor: pointer; }
+  .icon { display: block; width: 1.55rem; height: 1.55rem; margin: auto; fill: none; stroke: currentColor; stroke-linecap: round; stroke-width: 2; }
+  .overlay { position: fixed; z-index: 20; inset: 0; display: block; background: rgb(0 0 0 / 70%); opacity: 0; pointer-events: none; transition: opacity 180ms ease; }
+  .overlayVisible { opacity: 1; pointer-events: auto; }
+  .mobileNav { position: fixed; z-index: 21; top: 0; bottom: 0; left: 0; display: block; visibility: hidden; width: min(17rem, 76vw); border-right: 1px solid var(--border); background: var(--surface); padding: 6rem 1.5rem 2rem; pointer-events: none; transform: translateX(-100%); transition: transform 220ms ease, visibility 0s linear 220ms; }
+  .mobileNavOpened { visibility: visible; pointer-events: auto; transform: translateX(0); transition: transform 220ms ease, visibility 0s; }
+  .mobileList { display: grid; gap: 0.35rem; }
+  .mobileList a { display: block; border-radius: 0.45rem; padding: 0.85rem 0.75rem; font-size: 1rem; }
+  .mobileList a:hover, .mobileList a:focus-visible { background: var(--surface-muted); color: var(--accent); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay, .mobileNav { transition: none; }
+}

@@ -1,0 +1,40 @@
+.wrapper { max-width: 76rem; margin: 0 auto; }
+.visuallyHidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.drawPanel { padding: clamp(1rem, 3vw, 2rem); border: 1px solid var(--border); border-radius: 0.75rem; background: linear-gradient(135deg, var(--surface), var(--surface-muted)); }
+.drawHeading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; }
+.drawHeading h2 { font-size: clamp(1.35rem, 3vw, 2rem); }
+.eyebrow { margin-bottom: 0.35rem; color: var(--accent); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+.remaining { color: var(--text-muted); font-size: 0.8rem; }
+.result { display: grid; min-height: 20rem; place-items: center; margin: 1.5rem 0; border: 1px dashed var(--border); border-radius: 0.5rem; padding: 1rem; }
+.rolling { overflow: hidden; background: radial-gradient(circle at center, rgb(255 201 92 / 18%), transparent 58%), var(--surface); }
+.status, .placeholder { max-width: 30rem; color: var(--text-muted); text-align: center; line-height: 1.6; }
+.rollingDisplay { display: grid; justify-items: center; gap: 1rem; }
+.revealStage { position: relative; width: min(82vw, 28rem); height: min(70vw, 18rem); perspective: 55rem; }
+.revealCard { position: absolute; top: 50%; left: 0; width: 7.5rem; height: 11rem; transform-style: preserve-3d; animation: dealAndFlip 0.9s cubic-bezier(0.35, 0.05, 0.65, 0.95) forwards; }
+.cardFace { position: absolute; inset: 0; display: grid; overflow: hidden; place-items: center; border: 2px solid rgb(255 255 255 / 80%); border-radius: 0.55rem; backface-visibility: hidden; -webkit-backface-visibility: hidden; box-shadow: 0 1rem 1.8rem rgb(0 0 0 / 38%), 0 0 1.5rem rgb(255 189 90 / 18%); }
+.cardBack { isolation: isolate; background: #18233b; color: var(--accent); font-size: 2rem; font-weight: 900; }
+.cardBack::before { position: absolute; inset: 0.5rem; border: 1px solid rgb(255 189 90 / 55%); border-radius: 0.35rem; background: repeating-linear-gradient(45deg, transparent 0 0.35rem, rgb(255 189 90 / 10%) 0.35rem 0.45rem); content: ""; }
+.cardBack span { z-index: 1; display: grid; width: 3.25rem; height: 3.25rem; place-items: center; border: 1px solid var(--accent); border-radius: 50%; background: var(--surface); }
+.cardFront { display: block; overflow: hidden; transform: translateY(-50%) rotateY(180deg); }
+.cardFront img, .cardFront span { display: grid; width: 100%; height: 100%; place-items: center; object-fit: cover; background: var(--surface-muted); color: var(--accent); font-size: 2rem; font-weight: 900; }
+.cardFrontInfo { position: absolute; right: 0; bottom: 0; left: 0; display: grid; gap: 0.15rem; padding: 2rem 0.65rem 0.65rem; background: linear-gradient(transparent, rgb(7 9 14 / 95%) 35%); color: var(--foreground); font-size: 0.62rem; }
+.cardFrontInfo strong { overflow: hidden; font-size: 0.78rem; text-overflow: ellipsis; white-space: nowrap; }
+.cardFrontInfo span { display: block; width: auto; height: auto; min-height: 0; place-items: initial; background: transparent; color: var(--text-muted); font-size: 0.62rem; font-weight: 400; }
+.cardFrontInfo span:last-child { color: var(--accent); }
+.cardPosterFallback { height: 100% !important; }
+.resultCard { display: grid; grid-template-columns: 180px minmax(0, 1fr); align-items: center; gap: clamp(1rem, 4vw, 2.5rem); width: min(100%, 40rem); animation: resultReveal 0.42s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.resultCard img, .resultFallback { width: 180px; height: 270px; border-radius: 0.4rem; object-fit: cover; background: var(--surface); }
+.resultFallback { display: grid; place-items: center; color: var(--text-muted); }
+.type { color: var(--text-muted); font-size: 0.8rem; }
+.details h3 { margin: 0.45rem 0 0.75rem; font-size: clamp(1.5rem, 4vw, 2.5rem); line-height: 1.05; }
+.rating { margin-bottom: 1rem; color: var(--text-muted); }
+.details a { color: var(--accent); font-weight: 800; }
+.actions { display: flex; align-items: center; gap: 1rem; }
+.actions button { min-height: 2.75rem; border: 0; border-radius: 0.4rem; background: var(--accent); padding: 0.6rem 1rem; color: #111; cursor: pointer; font: inherit; font-weight: 600; }
+.actions button:disabled { cursor: not-allowed; opacity: 0.45; }
+.actions button:focus-visible, .details a:focus-visible { outline: 2px solid var(--foreground); outline-offset: 3px; }
+.actions p { color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; }
+@keyframes dealAndFlip { 0% { left: 0; opacity: 0; transform: translate(-50%, -50%) rotate(9deg) rotateY(0); } 18% { opacity: 1; } 58% { left: 50%; transform: translate(-50%, -50%) rotate(-3deg) rotateY(0); } 72% { left: 50%; transform: translate(-50%, -50%) rotate(0) rotateY(90deg); } 100% { left: 50%; transform: translate(-50%, -50%) rotate(0) rotateY(180deg); } }
+@keyframes resultReveal { from { opacity: 0; transform: scale(0.9) translateY(0.75rem); } to { opacity: 1; transform: scale(1) translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .revealCard { left: 50%; animation: none; transform: translate(-50%, -50%) rotateY(180deg); } .resultCard { animation: none; } }
+@media (max-width: 560px) { .drawHeading { align-items: start; flex-direction: column; } .resultCard { grid-template-columns: 1fr; justify-items: center; text-align: center; } .details { width: 100%; } .actions { align-items: stretch; flex-direction: column; } }

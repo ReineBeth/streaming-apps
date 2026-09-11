@@ -1,0 +1,29 @@
+.filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  max-width: 76rem;
+  margin: 0 auto 2rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+}
+
+.filters label { display: grid; min-width: 0; gap: 0.35rem; }
+.searchField { grid-column: span 2; }
+.filters label span { color: var(--text-muted); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+.filters input, .filters select { min-width: 0; min-height: 2.5rem; border: 1px solid var(--border); border-radius: 0.4rem; background: var(--surface-muted); padding: 0.55rem 0.7rem; color: var(--foreground); font: inherit; }
+.filters input, .filters select { width: 100%; }
+.filters input:focus-visible, .filters select:focus-visible, .filters button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.actions { display: flex; min-width: 0; grid-column: 1 / -1; align-items: end; gap: 0.5rem; }
+.actions button { min-width: 0; cursor: pointer; white-space: nowrap; }
+.actions button:disabled { cursor: wait; opacity: 0.65; }
+.suggestions { display: flex; flex-wrap: wrap; grid-column: 1 / -1; align-items: center; gap: 0.5rem; }
+.suggestions > span { width: 100%; color: var(--text-muted); font-size: 0.8rem; font-weight: 700; }
+.suggestion { border: 1px solid var(--border); border-radius: 999px; padding: 0.45rem 0.7rem; background: var(--surface); color: var(--foreground); cursor: pointer; font: inherit; }
+.suggestion:hover, .suggestion:focus-visible { border-color: var(--accent); color: var(--accent); }
+.status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (max-width: 900px) { .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } .searchField, .actions { grid-column: 1 / -1; } }
+@media (max-width: 560px) { .filters { grid-template-columns: 1fr; } .searchField, .actions { grid-column: auto; } .actions { align-items: stretch; flex-wrap: wrap; } }

@@ -1,0 +1,15 @@
+.section { margin-top: 2rem; }
+.section h2 { font-size: 1.25rem; }
+.list { display: grid; gap: 0.75rem; margin-top: 0.9rem; }
+.season { display: grid; grid-template-columns: minmax(10rem, 1fr) auto minmax(8rem, 1fr) auto minmax(8rem, 1fr); align-items: center; gap: 0.75rem; border: 1px solid var(--border); border-radius: 0.6rem; background: rgb(21 25 35 / 75%); padding: 0.85rem; }
+.seasonInfo { min-width: 10rem; }
+.seasonInfo h3 { font-size: 0.95rem; }
+.seasonInfo p { margin-top: 0.25rem; color: var(--text-muted); font-size: 0.8rem; }
+.form { display: grid; gap: 0.9rem; margin-top: 0.9rem; }
+.form label { color: var(--text-muted); font-size: 0.8rem; }
+.form select, .form button { min-height: 2.2rem; border: 1px solid var(--border); border-radius: 0.35rem; background: var(--surface-muted); padding: 0.4rem 0.55rem; color: var(--foreground); font: inherit; font-size: 0.8rem; }
+.saveButton { justify-self: start; border-color: var(--accent) !important; background: var(--accent) !important; color: #16110a !important; cursor: pointer; font-weight: 600; padding: 0.6rem 0.9rem !important; }
+.form select:focus-visible, .form button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.empty, .error { margin-top: 0.75rem; color: var(--text-muted); line-height: 1.5; }
+.error { color: #ffb4ab; }
+@media (max-width: 700px) { .season { align-items: stretch; grid-template-columns: 1fr 1fr; } .seasonInfo { grid-column: 1 / -1; } .season select { width: 100%; } .saveButton { width: 100%; justify-self: stretch; } }
