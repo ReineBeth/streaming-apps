@@ -28,6 +28,22 @@ function getSignUpErrorMessage(error: { code?: string; message: string }): strin
   return "Impossible de créer le compte. Vérifie l'adresse courriel et le mot de passe.";
 }
 
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => reject(new Error("AUTH_REQUEST_TIMEOUT")), timeoutMs);
+    promise.then(
+      (value) => {
+        window.clearTimeout(timeoutId);
+        resolve(value);
+      },
+      (error: unknown) => {
+        window.clearTimeout(timeoutId);
+        reject(error);
+      },
+    );
+  });
+}
+
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -54,8 +70,8 @@ export function LoginForm() {
     try {
       const supabase = createSupabaseBrowserClient();
       const result = mode === "signin"
-        ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signUp({ email, password });
+        ? await withTimeout(supabase.auth.signInWithPassword({ email, password }), 15000)
+        : await withTimeout(supabase.auth.signUp({ email, password }), 15000);
 
       if (result.error) {
         setError(mode === "signin" ? getSignInErrorMessage(result.error) : getSignUpErrorMessage(result.error));
@@ -68,12 +84,15 @@ export function LoginForm() {
         setIsSubmitting(false);
         return;
       }
-    } catch {
-      setError("Impossible de joindre Supabase. Vérifie l'URL du projet et réessaie.");
+    } catch (error) {
+      setError(error instanceof Error && error.message === "AUTH_REQUEST_TIMEOUT"
+        ? "La connexion prend trop de temps. Vérifie ta connexion Internet et réessaie."
+        : "Impossible de joindre Supabase. Vérifie l'URL du projet et réessaie.");
       setIsSubmitting(false);
       return;
     }
 
+    setIsSubmitting(false);
     router.replace(getSafeNextPath(searchParams.get("next")));
     router.refresh();
   }
