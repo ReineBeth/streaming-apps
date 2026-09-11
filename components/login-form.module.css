@@ -85,3 +85,34 @@
   color: #ff9c9c;
   font-size: 0.85rem;
 }
+
+.success {
+  color: #a9e7bd;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.modeSwitch {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-top: 1.25rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.modeSwitch button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--accent);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.modeSwitch button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
