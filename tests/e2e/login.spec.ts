@@ -7,3 +7,10 @@ test("login page exposes an accessible authentication form", async ({ page }) =>
   await expect(page.getByLabel(/mot de passe/i)).toBeVisible();
   await expect(page.getByRole("button", { name: /connecter/i })).toBeVisible();
 });
+
+test("login page can switch to account creation", async ({ page }) => {
+  await page.goto("/login");
+  await page.getByRole("button", { name: /créer un compte/i }).click();
+  await expect(page.getByRole("heading", { name: /créer un compte/i })).toBeVisible();
+  await expect(page.getByLabel(/confirmer le mot de passe/i)).toBeVisible();
+});

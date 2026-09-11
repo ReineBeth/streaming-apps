@@ -7,6 +7,9 @@
 .list a:hover, .list a:focus-visible, .mobileList a:hover, .mobileList a:focus-visible { color: var(--accent); }
 .list a:hover::after, .list a:focus-visible::after { opacity: 1; transform: scaleX(1); }
 .list a:focus-visible, .logo:focus-visible, .burger:focus-visible, .mobileList a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.authButton { border: 0; background: transparent; padding: 0; color: var(--text-muted); cursor: pointer; font: inherit; font-size: 0.85rem; font-weight: 700; }
+.authButton:hover, .authButton:focus-visible { color: var(--accent); }
+.authButton:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 .burger, .mobileNav, .overlay { display: none; }
 
 @media (max-width: 767px) {
@@ -21,6 +24,8 @@
   .mobileList { display: grid; gap: 0.35rem; }
   .mobileList a { display: block; border-radius: 0.45rem; padding: 0.85rem 0.75rem; font-size: 1rem; }
   .mobileList a:hover, .mobileList a:focus-visible { background: var(--surface-muted); color: var(--accent); }
+  .mobileList .authButton { display: block; width: 100%; border-radius: 0.45rem; padding: 0.85rem 0.75rem; text-align: left; font-size: 1rem; }
+  .mobileList .authButton:hover, .mobileList .authButton:focus-visible { background: var(--surface-muted); }
 }
 
 @media (prefers-reduced-motion: reduce) {

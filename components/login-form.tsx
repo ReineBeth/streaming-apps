@@ -19,32 +19,57 @@ function getSignInErrorMessage(error: { code?: string; message: string }): strin
   return "Adresse courriel ou mot de passe invalide.";
 }
 
+function getSignUpErrorMessage(error: { code?: string; message: string }): string {
+  const message = error.message.toLowerCase();
+  if (error.code === "user_already_exists" || message.includes("already registered") || message.includes("already exists")) {
+    return "Un compte existe déjà avec cette adresse courriel.";
+  }
+
+  return "Impossible de créer le compte. Vérifie l'adresse courriel et le mot de passe.";
+}
+
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
-    setIsSubmitting(true);
+    setMessage(null);
 
-    let signInError: Error | null = null;
-
-    try {
-      const result = await createSupabaseBrowserClient().auth.signInWithPassword({ email, password });
-      signInError = result.error;
-    } catch {
-      setError("Impossible de joindre Supabase. Vérifie l’URL du projet et redémarre le serveur.");
-      setIsSubmitting(false);
+    if (mode === "signup" && password !== passwordConfirmation) {
+      setError("Les mots de passe ne correspondent pas.");
       return;
     }
 
-    if (signInError) {
-      setError(getSignInErrorMessage(signInError));
+    setIsSubmitting(true);
+
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const result = mode === "signin"
+        ? await supabase.auth.signInWithPassword({ email, password })
+        : await supabase.auth.signUp({ email, password });
+
+      if (result.error) {
+        setError(mode === "signin" ? getSignInErrorMessage(result.error) : getSignUpErrorMessage(result.error));
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (mode === "signup" && !result.data.session) {
+        setMessage("Compte créé. Vérifie ta boîte courriel pour confirmer ton adresse avant de te connecter.");
+        setIsSubmitting(false);
+        return;
+      }
+    } catch {
+      setError("Impossible de joindre Supabase. Vérifie l'URL du projet et réessaie.");
       setIsSubmitting(false);
       return;
     }
@@ -53,12 +78,19 @@ export function LoginForm() {
     router.refresh();
   }
 
+  function switchMode(nextMode: "signin" | "signup") {
+    setMode(nextMode);
+    setError(null);
+    setMessage(null);
+    setPasswordConfirmation("");
+  }
+
   return (
     <section className={styles.page}>
       <div className={styles.card}>
         <p className={styles.eyebrow}>Streaming Apps</p>
-        <h1>Se connecter</h1>
-        <p className={styles.intro}>Retrouve ton catalogue personnel et tes abonnements.</p>
+        <h1>{mode === "signin" ? "Se connecter" : "Créer un compte"}</h1>
+        <p className={styles.intro}>{mode === "signin" ? "Retrouve ton catalogue personnel et tes abonnements." : "Crée un catalogue séparé pour chaque personne."}</p>
 
         <form className={styles.form} onSubmit={handleSubmit} aria-busy={isSubmitting}>
           <div className={styles.field}>
@@ -67,13 +99,27 @@ export function LoginForm() {
           </div>
           <div className={styles.field}>
             <label htmlFor="password">Mot de passe</label>
-            <input id="password" type="password" autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} />
+            <input id="password" type="password" autoComplete={mode === "signin" ? "current-password" : "new-password"} minLength={6} required value={password} onChange={(event) => setPassword(event.target.value)} />
           </div>
+          {mode === "signup" ? <div className={styles.field}>
+            <label htmlFor="passwordConfirmation">Confirmer le mot de passe</label>
+            <input id="passwordConfirmation" type="password" autoComplete="new-password" minLength={6} required value={passwordConfirmation} onChange={(event) => setPasswordConfirmation(event.target.value)} />
+          </div> : null}
           {error ? <p className={styles.error} role="alert" aria-live="assertive">{error}</p> : null}
+          {message ? <p className={styles.success} role="status" aria-live="polite">{message}</p> : null}
           <button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Connexion…" : "Se connecter"}
+            {isSubmitting ? "Patiente un instant…" : mode === "signin" ? "Se connecter" : "Créer le compte"}
           </button>
         </form>
+        <div className={styles.modeSwitch}>
+          {mode === "signin" ? <>
+            <span>Pas encore de compte ?</span>
+            <button type="button" onClick={() => switchMode("signup")}>Créer un compte</button>
+          </> : <>
+            <span>Tu as déjà un compte ?</span>
+            <button type="button" onClick={() => switchMode("signin")}>Se connecter</button>
+          </>}
+        </div>
       </div>
     </section>
   );
