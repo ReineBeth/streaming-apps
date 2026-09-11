@@ -70,7 +70,7 @@ function AccordionControl({ children }: { children: ReactNode }) {
   if (!accordion || !item) throw new Error("Accordion.Control must be rendered inside Accordion.Item");
 
   const open = accordion.isOpen(item.value);
-  return <h2 className={styles.heading}><button className={styles.control} type="button" aria-expanded={open} aria-controls={item.panelId} onClick={() => accordion.toggle(item.value)}><span>{children}</span><span className={`${styles.chevron} ${open ? styles.chevronOpen : ""}`} aria-hidden="true">⌄</span></button></h2>;
+  return <h2 className={styles.heading}><button className={styles.control} type="button" aria-expanded={open} aria-controls={item.panelId} onClick={() => accordion.toggle(item.value)}><span>{children}</span><span className={`${styles.chevron} ${open ? styles.chevronOpen : ""}`} aria-hidden="true"><span className={styles.chevronIcon} /></span></button></h2>;
 }
 
 function AccordionPanel({ children }: { children: ReactNode }) {
