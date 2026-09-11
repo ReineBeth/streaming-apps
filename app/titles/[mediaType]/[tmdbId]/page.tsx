@@ -57,7 +57,7 @@ export default async function TitleDetailsPage({ params }: { params: Promise<{ m
     console.error("Title auth state error", error instanceof Error ? error.message : "Unknown error");
   }
   const { data: userTitle } = user ? await supabase.from("user_titles").select("status, rating_label").eq("user_id", user.id).eq("tmdb_id", id).eq("media_type", validMediaType).maybeSingle() : { data: null };
-  const activeProviders = providers.filter((provider) => activeProviderIds.includes(provider.id));
+  const activeProviders = user ? providers.filter((provider) => activeProviderIds.includes(provider.id)) : providers;
   const isMovie = validMediaType === "movie";
   const { data: seasonStates } = !isMovie && user ? await supabase.from("user_seasons").select("season_number, status, rating_label").eq("user_id", user.id).eq("tmdb_id", id) : { data: [] };
   const movie = title as TmdbMovie;
@@ -80,7 +80,7 @@ export default async function TitleDetailsPage({ params }: { params: Promise<{ m
             <h1>{name}</h1>
             <p className={styles.rating}>★ {title.vote_average?.toFixed(1) ?? "—"} / 10 TMDB</p>
             <p className={styles.overview}>{title.overview || "Aucune description disponible."}</p>
-            <TitleStatusForm key={`${validMediaType}-${id}-${userTitle?.status ?? "none"}`} tmdbId={id} mediaType={validMediaType} status={(userTitle?.status as TitleStatus | undefined) ?? null} rating={(userTitle?.rating_label as PersonalRating | null) ?? null} />
+            <TitleStatusForm key={`${validMediaType}-${id}-${userTitle?.status ?? "none"}`} tmdbId={id} mediaType={validMediaType} status={(userTitle?.status as TitleStatus | undefined) ?? null} rating={(userTitle?.rating_label as PersonalRating | null) ?? null} isAuthenticated={Boolean(user)} />
             <dl className={styles.metadata}>
               <div><dt>Langue originale</dt><dd>{title.original_language ? getLanguageLabel(title.original_language) : "Non renseignée"}</dd></div>
               <div><dt>Genres</dt><dd>{title.genres?.map((genre) => genre.name).join(", ") || "Non renseignés"}</dd></div>
@@ -93,7 +93,7 @@ export default async function TitleDetailsPage({ params }: { params: Promise<{ m
           </div>
         </div>
       </article>
-      {!isMovie && <SeasonTracker key={(seasonStates ?? []).map((state) => `${state.season_number}:${state.status}:${state.rating_label ?? ""}`).join("|")} showId={id} seasons={show.seasons ?? []} states={seasonStates ?? []} />}
+      {!isMovie && user ? <SeasonTracker key={(seasonStates ?? []).map((state) => `${state.season_number}:${state.status}:${state.rating_label ?? ""}`).join("|")} showId={id} seasons={show.seasons ?? []} states={seasonStates ?? []} /> : !isMovie ? <p className={styles.loginPrompt}><Link href={`/login?next=${encodeURIComponent(`/titles/${validMediaType}/${id}`)}`}>Se connecter pour suivre les saisons</Link></p> : null}
       <section className={styles.creditsSection} aria-labelledby="credits-title">
         <h2 id="credits-title">Distribution et équipe</h2>
         <div className={styles.creditColumns}>

@@ -24,7 +24,7 @@ async function enrich(title: { id: number; mediaType: "movie" | "tv" }, provider
     const details = title.mediaType === "movie" ? await getMovie(title.id) : await getTvShow(title.id);
     let providers: WatchProvider[] = [];
     try {
-      providers = (await getWatchProviders(title.id, title.mediaType)).filter((provider) => providerIds.includes(provider.id));
+      providers = (await getWatchProviders(title.id, title.mediaType)).filter((provider) => providerIds.length === 0 || providerIds.includes(provider.id));
     } catch (error) {
       console.error("Home provider enrichment error", error instanceof Error ? error.message : "Unknown error");
     }
@@ -42,27 +42,28 @@ async function enrichList(titles: Array<{ id: number; mediaType: "movie" | "tv" 
 async function getHomeData() {
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { user: null, inProgress: [], watchlist: [], movies: [], shows: [] };
-  const providerIds = await getActiveTmdbProviderIds();
+  const providerIds = user ? await getActiveTmdbProviderIds() : [];
+  const [movies, shows] = await Promise.all([discoverMovies(providerIds, 1), discoverTvShows(providerIds, 1)]);
+  const popularMovies = await enrichList(movies.results.slice(0, 6).map((title) => ({ id: title.id, mediaType: "movie" as const })), providerIds);
+  const popularShows = await enrichList(shows.results.slice(0, 6).map((title) => ({ id: title.id, mediaType: "tv" as const })), providerIds);
+  if (!user) return { user: null, inProgress: [], watchlist: [], suggestions: [], movies: popularMovies, shows: popularShows };
+
   const { data: personalTitles } = await supabase.from("user_titles").select("tmdb_id, media_type, status, rating_label").eq("user_id", user.id).order("updated_at", { ascending: false }).limit(100);
   const inProgress = await enrichList((personalTitles ?? []).filter((title) => title.status === "in_progress").slice(0, 6).map((title) => ({ id: title.tmdb_id, mediaType: title.media_type })), providerIds, "in_progress");
   const watchlist = await enrichList((personalTitles ?? []).filter((title) => title.status === "to_watch").slice(0, 6).map((title) => ({ id: title.tmdb_id, mediaType: title.media_type })), providerIds, "to_watch");
   const excluded = new Set((personalTitles ?? []).map((title) => `${title.media_type}:${title.tmdb_id}`));
   const suggestions = await getPersonalizedRecommendations(personalTitles ?? [], providerIds, excluded);
-  const [movies, shows] = await Promise.all([discoverMovies(providerIds, 1), discoverTvShows(providerIds, 1)]);
-  const popularMovies = await enrichList(movies.results.slice(0, 6).map((title) => ({ id: title.id, mediaType: "movie" as const })), providerIds);
-  const popularShows = await enrichList(shows.results.slice(0, 6).map((title) => ({ id: title.id, mediaType: "tv" as const })), providerIds);
   return { user, inProgress, watchlist, suggestions, movies: popularMovies, shows: popularShows };
 }
 
-function Section({ title, href, titles }: { title: string; href?: string; titles: CatalogTitleSummary[] }) {
+function Section({ title, href, titles, isAuthenticated = true }: { title: string; href?: string; titles: CatalogTitleSummary[]; isAuthenticated?: boolean }) {
   if (titles.length === 0) return null;
-  return <section className={styles.section}><div className={styles.sectionHeader}><h2>{title}</h2>{href && <Link href={href}>Voir tout →</Link>}</div><div className={styles.grid}>{titles.map((item, index) => <MediaCard key={`${item.mediaType}-${item.tmdbId}`} title={item} priority={index === 0} />)}</div></section>;
+  return <section className={styles.section}><div className={styles.sectionHeader}><h2>{title}</h2>{href && <Link href={href}>Voir tout →</Link>}</div><div className={styles.grid}>{titles.map((item, index) => <MediaCard key={`${item.mediaType}-${item.tmdbId}`} title={item} priority={index === 0} isAuthenticated={isAuthenticated} />)}</div></section>;
 }
 
 export default async function Home() {
   const { user, inProgress, watchlist, suggestions, movies, shows } = await getHomeData();
-  if (!user) return <main className={styles.page}><section className={styles.welcome}><p className={styles.eyebrow}>Streaming Apps</p><h1>Ton catalogue personnel, enfin simple à parcourir.</h1><p>Retrouve les films et séries disponibles au Canada sur tes plateformes.</p><Link className={styles.primaryLink} href="/login">Se connecter</Link></section></main>;
+  if (!user) return <main className={styles.page}><section className={styles.welcome}><p className={styles.eyebrow}>Streaming Apps</p><h1>Des films et séries à découvrir au Canada.</h1><p>Explore les titres populaires et ouvre leurs fiches sans créer de compte. Connecte-toi seulement pour gérer tes statuts, tes notes et ta liste personnelle.</p><Link className={styles.primaryLink} href="/login">Se connecter</Link></section><Section title="Films populaires au Canada" href="/explorer?type=movie&service=all" titles={movies} isAuthenticated={false} /><Section title="Séries populaires au Canada" href="/explorer?type=tv&service=all" titles={shows} isAuthenticated={false} /></main>;
 
   return <main className={styles.page}><header className={styles.hero}><p className={styles.eyebrow}>Ton espace personnel</p><h1>Qu’est-ce qu’on regarde ?</h1><p>Retrouve ta progression et les nouveautés disponibles sur tes services actifs.</p></header><Section title="Continuer à regarder" href="/history?type=tv" titles={inProgress} /><Section title="Ma liste" href="/watchlist" titles={watchlist} /><RecommendationSection titles={suggestions} storageKey={`streaming-apps-dismissed:${user.id}`} /><Section title="Films populaires sur mes plateformes" href="/explorer?type=movie" titles={movies} /><Section title="Séries populaires sur mes plateformes" href="/explorer?type=tv" titles={shows} /></main>;
 }

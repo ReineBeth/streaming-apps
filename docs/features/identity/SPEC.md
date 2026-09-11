@@ -9,7 +9,7 @@ Provide Supabase authentication and a user profile foundation. V1 needs one usab
 - A user can sign in using the approved Supabase method.
 - Authenticated server requests can resolve the current user safely.
 - A profile row is created for a new user and is inaccessible to other users through RLS.
-- Unauthenticated users are redirected or shown an appropriate sign-in state for protected routes.
+- Unauthenticated users can browse the public Explorer catalogue and title details, while personal status, rating, season tracking and account settings require sign-in.
 
 ## Boundaries
 

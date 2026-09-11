@@ -24,6 +24,8 @@
 .providers li { border: 1px solid var(--border); border-radius: 999px; padding: 0.4rem 0.65rem; color: var(--text-muted); font-size: 0.8rem; }
 .paid { margin-left: 0.25rem; color: var(--accent); font-weight: 800; }
 .muted { margin-top: 0.75rem; color: var(--text-muted); }
+.loginPrompt { margin-top: 1.5rem; }
+.loginPrompt a { color: var(--accent); font-weight: 700; text-decoration: underline; text-underline-offset: 0.2em; }
 .creditsSection { max-width: 90rem; margin: 2rem auto 0; padding: clamp(1.25rem, 3vw, 2rem); border: 1px solid var(--border); border-radius: 1rem; background: var(--surface); }
 .creditsSection h2 { font-size: 1.5rem; }
 .creditColumns { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.5rem; margin-top: 1.25rem; }

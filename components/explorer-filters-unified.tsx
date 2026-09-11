@@ -20,9 +20,10 @@ interface ExplorerFiltersProps {
   genres: FilterOption[];
   people: FilterOption[];
   companies: FilterOption[];
+  isAuthenticated: boolean;
 }
 
-export function ExplorerFiltersUnified({ services, genres, people, companies }: ExplorerFiltersProps) {
+export function ExplorerFiltersUnified({ services, genres, people, companies, isAuthenticated }: ExplorerFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -65,7 +66,7 @@ export function ExplorerFiltersUnified({ services, genres, people, companies }: 
           <Accordion.Panel>
             <div className={styles.advancedGrid}>
               <label><span>Type</span><select name="type" defaultValue={searchParams.get("type") ?? "all"}><option value="all">Tous</option><option value="movie">Films</option><option value="tv">Séries</option></select></label>
-              <label><span>Service</span><select name="service" defaultValue={searchParams.get("service") ?? "active"}><option value="active">Tous mes services</option><option value="all">Toutes les plateformes</option>{services.map((service) => <option key={service.id} value={service.id}>{service.label}</option>)}</select></label>
+              <label><span>Service</span><select name="service" defaultValue={searchParams.get("service") ?? (isAuthenticated ? "active" : "all")}><option value="active">Tous mes services</option><option value="all">Toutes les plateformes</option>{services.map((service) => <option key={service.id} value={service.id}>{service.label}</option>)}</select></label>
               <label><span>Coût</span><select name="cost" defaultValue={searchParams.get("cost") ?? "free"}><option value="free">Gratuit / inclus</option><option value="paid">Payant</option><option value="all">Tous</option></select></label>
               <label><span>Origine</span><select name="quebec" defaultValue={searchParams.get("quebec") ?? "false"}><option value="false">Tous les contenus</option><option value="true">Contenu québécois</option></select></label>
               <label><span>Genre</span><select name="genre" defaultValue={searchParams.get("genre") ?? "all"}><option value="all">Tous les genres</option>{genres.map((genre) => <option key={genre.id} value={genre.id}>{genre.label}</option>)}</select></label>
