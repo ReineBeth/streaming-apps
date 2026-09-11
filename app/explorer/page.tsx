@@ -138,6 +138,7 @@ function compareTitles(first: TmdbMovie | TmdbTvShow, second: TmdbMovie | TmdbTv
 
 async function getExplorerData(filters: ExplorerFiltersData) {
   const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
   const [servicesResult, genres, personalTitlesResult, seasonRatingsResult, searchResult, companiesResult] = await Promise.all([
     supabase.from("streaming_services").select("tmdb_provider_id, name").order("name"),
     Promise.all([getGenres("movie"), getGenres("tv")]),
@@ -160,8 +161,9 @@ async function getExplorerData(filters: ExplorerFiltersData) {
   } catch {
     throw new ExplorerDataError("Impossible de charger tes services actifs. Réessaie dans quelques instants.");
   }
-  const providerIds = filters.allPlatforms ? [] : filters.serviceId ? [filters.serviceId] : activeProviderIds;
-  const catalog = await getCatalogTitles(providerIds, effectiveFilters);
+  const publicFilters = !user && !effectiveFilters.serviceId ? { ...effectiveFilters, allPlatforms: true } : effectiveFilters;
+  const providerIds = publicFilters.allPlatforms ? [] : publicFilters.serviceId ? [publicFilters.serviceId] : activeProviderIds;
+  const catalog = await getCatalogTitles(providerIds, publicFilters);
   const personalState = new Map((personalTitles ?? []).map((item) => [`${item.media_type}:${item.tmdb_id}`, item]));
   const seasonRatingMap = new Map<number, Array<{ seasonNumber: number; rating: NonNullable<CatalogTitleSummary["personalRating"]> }>>();
   for (const season of seasonRatings ?? []) {
@@ -188,6 +190,7 @@ async function getExplorerData(filters: ExplorerFiltersData) {
     })),
     companies: (companiesResult?.results ?? []).slice(0, 20).map((company) => ({ id: String(company.id), label: company.name, detail: company.origin_country ?? "" })),
     personSelection: exactPerson,
+    isAuthenticated: Boolean(user),
   };
 }
 
@@ -210,7 +213,7 @@ export default async function ExplorerPage({ searchParams }: { searchParams: Sea
     return <main className={styles.page}><section className={styles.message} role="alert"><p className={styles.eyebrow}>Catalogue indisponible</p><h1>Impossible de charger Explorer</h1><p>{result.error ?? "La récupération du catalogue a échoué."} Vérifie ta configuration TMDB.</p></section></main>;
   }
 
-  const { titles, totalPages, services, genres, people, companies, personSelection } = result.data;
+  const { titles, totalPages, services, genres, people, companies, personSelection, isAuthenticated } = result.data;
   const resolvedPerson = filters.personId ? { id: filters.personId, role: filters.personRole } : personSelection;
   if (!filters.personId && resolvedPerson) {
     filters.personId = resolvedPerson.id;
@@ -222,7 +225,7 @@ export default async function ExplorerPage({ searchParams }: { searchParams: Sea
       <main className={styles.page}>
         <header className={styles.header}><div><p className={styles.eyebrow}>Canada · Mes plateformes</p><h1>Explorer</h1><p className={styles.intro}>Les films et séries disponibles sur tes services actifs au Canada.</p></div><TextLink className={styles.contextLink} href="/settings">Gérer mes services</TextLink></header>
         <p className={styles.rouletteLink}><TextLink href="/roulette">Lancer la roulette</TextLink></p>
-        <ExplorerFiltersUnified services={services} genres={genres} people={people} companies={companies} />
+        <ExplorerFiltersUnified services={services} genres={genres} people={people} companies={companies} isAuthenticated={isAuthenticated} />
         {titles.length > 0 ? <section className={styles.grid} aria-label="Catalogue disponible">{titles.map((title, index) => <MediaCard key={`${title.mediaType}-${title.tmdbId}`} title={title} priority={index === 0} />)}</section> : <p className={styles.message} role="status">{filters.personId || filters.companyId ? <>Aucun titre correspondant n’est disponible avec ces critères et tes services actifs. <Link href={buildPageUrl(rawParams, 1, { service: "all" })}>Afficher toutes les plateformes</Link>.</> : hasActiveFilters ? "Aucun titre ne correspond à ces filtres." : <>Aucun titre à afficher. Active au moins un service dans <Link href="/settings">Mes services</Link>.</>}</p>}
         {shouldShowPagination(filters.page, Math.min(totalPages, 500), titles.length, EXPLORER_PAGE_SIZE) && <Pagination current={filters.page} total={Math.min(totalPages, 500)} getHref={(page) => buildPageUrl(rawParams, page)} />}
       </main>

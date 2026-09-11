@@ -1,6 +1,7 @@
 "use client";
 
 import { updateTitleRating, updateTitleStatus } from "@/app/titles/actions";
+import Link from "next/link";
 import type { PersonalRating, TitleStatus } from "@/types/domain";
 import { useActionState } from "react";
 
@@ -14,9 +15,14 @@ const ratingOptions: Array<{ value: PersonalRating; label: string }> = [
   { value: "bad", label: "Mauvais" }, { value: "okay", label: "Correct" }, { value: "good", label: "Bon" }, { value: "very_good", label: "Très bon" }, { value: "masterpiece", label: "Chef-d’œuvre" },
 ];
 
-export function TitleStatusForm({ tmdbId, mediaType, status, rating }: { tmdbId: number; mediaType: "movie" | "tv"; status: TitleStatus | null; rating: PersonalRating | null }) {
+export function TitleStatusForm({ tmdbId, mediaType, status, rating, isAuthenticated }: { tmdbId: number; mediaType: "movie" | "tv"; status: TitleStatus | null; rating: PersonalRating | null; isAuthenticated: boolean }) {
   const [statusState, statusAction] = useActionState(runAction(updateTitleStatus), { error: null });
   const [ratingState, ratingAction] = useActionState(runAction(updateTitleRating), { error: null });
+
+  if (!isAuthenticated) {
+    const nextPath = `/titles/${mediaType}/${tmdbId}`;
+    return <Link className={styles.loginLink} href={`/login?next=${encodeURIComponent(nextPath)}`}>Se connecter pour ajouter un statut ou une note</Link>;
+  }
 
   return (
     <div className={styles.controls}>

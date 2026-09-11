@@ -19,13 +19,7 @@ export async function updateSupabaseSession(request: NextRequest) {
     },
   });
 
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user && request.nextUrl.pathname.startsWith("/explorer")) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("next", request.nextUrl.pathname);
-    return NextResponse.redirect(loginUrl);
-  }
+  await supabase.auth.getUser();
 
   return response;
 }
