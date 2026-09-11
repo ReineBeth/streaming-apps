@@ -6,6 +6,7 @@ test("Explorer remains usable on compact screens", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Explorer" })).toBeVisible();
   await expect(page.getByRole("search", { name: /filtrer le catalogue/i })).toBeVisible();
   await expect(page.getByLabel("Rechercher")).toBeVisible();
+  await page.getByRole("button", { name: "Recherche avancée" }).click();
   await expect(page.getByLabel("Type")).toBeVisible();
   await expect(page.getByLabel("Service")).toBeVisible();
   await expect(page.locator("article").first()).toBeVisible();

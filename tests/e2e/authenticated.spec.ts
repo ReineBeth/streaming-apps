@@ -19,6 +19,7 @@ test("Explorer exposes filters and title details", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Explorer" })).toBeVisible();
   await expect(page.getByRole("search", { name: /filtrer le catalogue/i })).toBeVisible();
   await expect(page.getByLabel("Rechercher")).toBeVisible();
+  await page.getByRole("button", { name: "Recherche avancée" }).click();
   await expect(page.getByLabel("Mon statut")).toBeVisible();
 
   await page.getByLabel("Rechercher").fill("Ted");
@@ -46,11 +47,13 @@ test("Explorer resets filters and keeps the filter controls keyboard accessible"
   const filterForm = page.getByRole("search", { name: /filtrer le catalogue/i });
   await expect(filterForm).toBeVisible();
   await expect(page.getByLabel("Rechercher")).toHaveValue("Ted");
+  await filterForm.getByRole("button", { name: "Recherche avancée" }).click();
   await expect(page.getByLabel("Type")).toHaveValue("movie");
 
   await page.getByRole("button", { name: "Réinitialiser" }).click();
   await expect(page).toHaveURL(/\/explorer(?:\?|$)/);
   await expect(page.getByLabel("Rechercher")).toHaveValue("");
+  await filterForm.getByRole("button", { name: "Recherche avancée" }).click();
   await expect(page.getByLabel("Type")).toHaveValue("all");
   await expect(filterForm).toHaveAttribute("aria-busy", "false");
 
