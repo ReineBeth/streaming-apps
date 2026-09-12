@@ -31,7 +31,7 @@ describe("parseExplorerFilters", () => {
   });
 
   it("accepts supported filters and caps valid pages at TMDB's limit", () => {
-    expect(parseExplorerFilters({ type: "tv", service: "2303", genre: "18", year: "2024", minRating: "7", page: "999", quebec: "true", status: "watched", personalRating: "good", sort: "newest" }, 2026)).toEqual({
+    expect(parseExplorerFilters({ type: "tv", service: "2303", genre: "18", year: "2024", minRating: "7", page: "999", quebec: "true", status: "watched", personalRating: "good", recommended: "true", sort: "newest" }, 2026)).toEqual({
       query: "",
       type: "tv",
       serviceId: 2303,
@@ -42,6 +42,7 @@ describe("parseExplorerFilters", () => {
       sort: "newest",
       status: "watched",
       personalRating: "good",
+      recommendedByFriend: true,
       cost: "free",
       quebec: true,
       personId: null,

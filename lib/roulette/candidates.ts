@@ -4,6 +4,7 @@ import { getActiveTmdbProviderIds } from "@/lib/streaming-services";
 import { discoverMovies, discoverTvShows } from "@/lib/tmdb/catalog";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { filterCandidatesByStatus, toRouletteSummary, type RouletteStatusFilter } from "@/lib/roulette/candidate-filters";
+import { getFriendRecommendedTitleKeys } from "@/lib/recommendations/friends";
 import type { CatalogTitleSummary, MediaType, TitleStatus } from "@/types/domain";
 import type { TmdbMovie, TmdbTvShow } from "@/types/tmdb";
 
@@ -14,6 +15,7 @@ export interface RouletteFilters {
   genreId: number | null;
   minRating: number | null;
   status: RouletteStatusFilter;
+  recommendedByFriend: boolean;
 }
 
 type PersonalTitleState = {
@@ -27,6 +29,7 @@ export async function getRouletteCandidates(filters: RouletteFilters): Promise<C
   if (providerIds.length === 0) return [];
 
   const supabase = await createSupabaseServerClient();
+  const friendRecommendedKeys = filters.recommendedByFriend ? await getFriendRecommendedTitleKeys(supabase) : null;
   const { data: personalTitles, error } = await supabase
     .from("user_titles")
     .select("tmdb_id, media_type, status");
@@ -54,7 +57,8 @@ export async function getRouletteCandidates(filters: RouletteFilters): Promise<C
     return response.results.map((title) => withPersonalState(title, mediaType, personalState));
   }));
 
-  return filterCandidatesByStatus(results.flat(), filters.status);
+  const candidates = filterCandidatesByStatus(results.flat(), filters.status);
+  return friendRecommendedKeys ? candidates.filter((candidate) => friendRecommendedKeys.has(`${candidate.mediaType}:${candidate.tmdbId}`)) : candidates;
 }
 
 function withPersonalState(

@@ -22,6 +22,7 @@ interface RouletteFiltersProps {
     genreId: number | null;
     minRating: number | null;
     status: RouletteStatusFilter;
+    recommendedByFriend: boolean;
   };
 }
 
@@ -81,6 +82,13 @@ export function RouletteFilters({ genres, values }: RouletteFiltersProps) {
           <option value="watched">Vu</option>
           <option value="abandoned">Abandonné</option>
           <option value="not_interested">Pas intéressé</option>
+        </select>
+      </label>
+      <label>
+        <span>Recommandation</span>
+        <select name="recommended" defaultValue={searchParams.get("recommended") ?? (values.recommendedByFriend ? "true" : "all")}>
+          <option value="all">Toutes les recommandations</option>
+          <option value="true">Recommandé par un ami (Bon et +)</option>
         </select>
       </label>
       <div className={styles.actions}>

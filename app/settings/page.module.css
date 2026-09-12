@@ -29,9 +29,105 @@
   line-height: 1.5;
 }
 
+.profile {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  padding: 1rem 1.1rem;
+}
+
+.profile h2 {
+  font-size: 1rem;
+}
+
+.profile p {
+  margin-top: 0.25rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.profileForm {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.profileForm label {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.profileControls {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.profileControls input {
+  min-width: 0;
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  background: var(--background);
+  padding: 0.6rem 0.8rem;
+  color: var(--foreground);
+  font: inherit;
+}
+
+.profileControls input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .list {
   display: grid;
   gap: 0.75rem;
+}
+
+.friends {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  padding: 1rem 1.1rem;
+}
+
+.friends h2 {
+  font-size: 1rem;
+}
+
+.friends p {
+  margin-top: 0.25rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.friendList {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.friend {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.6rem;
+}
+
+.friend span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.emptyFriends {
+  margin: 0;
 }
 
 .service {
@@ -85,4 +181,11 @@
 .message {
   margin-top: 4rem;
   color: var(--text-muted);
+}
+
+@media (max-width: 34rem) {
+  .profileControls {
+    align-items: stretch;
+    flex-direction: column;
+  }
 }

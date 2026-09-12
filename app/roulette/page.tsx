@@ -24,11 +24,13 @@ function parseFilters(params: Record<string, string | string[] | undefined>): Ro
   const genreId = Number.parseInt(firstParam(params.genre), 10);
   const minRating = Number.parseFloat(firstParam(params.minRating));
   const status = firstParam(params.status);
+  const recommendedByFriend = firstParam(params.recommended) === "true";
   return {
     type: type === "movie" || type === "tv" ? type : "all",
     genreId: Number.isFinite(genreId) ? genreId : null,
     minRating: Number.isFinite(minRating) && minRating >= 0 && minRating <= 10 ? minRating : null,
     status: status === "empty" || status === "to_watch" || status === "in_progress" || status === "watched" || status === "abandoned" || status === "not_interested" ? status : null,
+    recommendedByFriend,
   };
 }
 
