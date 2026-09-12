@@ -1,0 +1,28 @@
+.page { min-height: 100vh; max-width: 44rem; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
+.header { margin-bottom: 1.5rem; }
+.eyebrow { color: var(--accent); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+.header h1 { margin-top: 0.4rem; font-size: clamp(2rem, 8vw, 3.5rem); letter-spacing: -0.05em; }
+.header p:last-child { margin-top: 0.6rem; color: var(--text-muted); }
+.waiting, .results { border: 1px solid var(--border); border-radius: 1rem; background: var(--surface); padding: 1.25rem; }
+.waiting h2, .results h2 { font-size: 1.35rem; }
+.waiting p, .results > p:last-child { margin-top: 0.65rem; color: var(--text-muted); line-height: 1.5; }
+.shareControls { display: flex; gap: 0.6rem; margin-top: 1rem; }
+.waiting input { min-width: 0; flex: 1; border: 1px solid var(--border); border-radius: 0.5rem; background: var(--surface-muted); padding: 0.7rem; color: var(--foreground); }
+.swipeArea { display: grid; justify-items: center; }
+.progress { display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.75rem; color: var(--text-muted); font-size: 0.85rem; }
+.card { width: min(100%, 28rem); overflow: hidden; border: 1px solid var(--border); border-radius: 1rem; background: var(--surface); touch-action: pan-y; user-select: none; transition: transform 180ms ease; cursor: grab; }
+.card:active { cursor: grabbing; }
+.poster { position: relative; aspect-ratio: 2 / 3; display: grid; place-items: center; background: var(--surface-muted); color: var(--text-muted); }
+.poster img { object-fit: cover; }
+.cardContent { padding: 1rem 1.1rem 1.25rem; }
+.cardContent p, .cardContent span, .result p { color: var(--text-muted); font-size: 0.85rem; }
+.cardContent h2 { margin-top: 0.3rem; font-size: 1.65rem; }
+.cardContent span { display: block; margin-top: 0.5rem; }
+.voteActions { display: flex; justify-content: center; gap: 0.75rem; margin-top: 1rem; }
+.hint { margin-top: 0.75rem; color: var(--text-muted); font-size: 0.8rem; text-align: center; }
+.resultList { display: grid; gap: 0.75rem; margin-top: 1rem; }
+.result { display: flex; gap: 0.85rem; align-items: center; border-top: 1px solid var(--border); padding-top: 0.75rem; }
+.result img, .resultFallback { width: 4.5rem; height: 6.75rem; flex: 0 0 auto; object-fit: cover; border-radius: 0.4rem; background: var(--surface-muted); }
+.resultFallback { display: grid; place-items: center; color: var(--text-muted); }
+.result h3 { margin: 0.2rem 0 0.5rem; }
+@media (prefers-reduced-motion: reduce) { .card { transition: none; } }

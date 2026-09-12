@@ -8,7 +8,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 import styles from "./navbar.module.css";
 
-const links = [["/", "Accueil"], ["/explorer", "Explorer"], ["/roulette", "Roulette"], ["/watchlist", "À voir"], ["/history", "Historique"], ["/settings", "Paramètres"]] as const;
+const links = [["/", "Accueil"], ["/explorer", "Explorer"], ["/roulette", "Roulette"], ["/tinder-movie", "À deux"], ["/watchlist", "À voir"], ["/history", "Historique"], ["/settings", "Paramètres"]] as const;
 
 export function Navbar() {
   const router = useRouter();
