@@ -14,6 +14,7 @@ export interface ExplorerFiltersData {
   sort: SortOption;
   status: TitleStatus | null;
   personalRating: PersonalRating | null;
+  recommendedByFriend: boolean;
   cost: CostFilter;
   quebec: boolean;
   personId: number | null;
@@ -56,6 +57,7 @@ export function parseExplorerFilters(
   const sort = firstParam(params.sort);
   const status = firstParam(params.status);
   const personalRating = firstParam(params.personalRating);
+  const recommendedByFriend = firstParam(params.recommended) === "true";
   const cost = firstParam(params.cost);
   const personSelection = parsePersonSelection(firstParam(params.personId));
   const page = positiveInteger(firstParam(params.page));
@@ -71,6 +73,7 @@ export function parseExplorerFilters(
     sort: sort === "rating" || sort === "newest" || sort === "oldest" ? sort : "popularity",
     status: status === "to_watch" || status === "in_progress" || status === "watched" || status === "abandoned" || status === "not_interested" ? status : null,
     personalRating: personalRating === "bad" || personalRating === "okay" || personalRating === "good" || personalRating === "very_good" || personalRating === "masterpiece" ? personalRating : null,
+    recommendedByFriend,
     cost: cost === "paid" || cost === "all" ? cost : "free",
     quebec: firstParam(params.quebec) === "true",
     personId: personSelection.id,

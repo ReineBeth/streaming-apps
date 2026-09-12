@@ -75,6 +75,7 @@ export function ExplorerFiltersUnified({ services, genres, people, companies, is
               <label><span>Trier par</span><select name="sort" defaultValue={searchParams.get("sort") ?? "popularity"}><option value="popularity">Popularité</option><option value="rating">Note la plus haute</option><option value="newest">Date la plus récente</option><option value="oldest">Date la plus ancienne</option></select></label>
               <label><span>Mon statut</span><select name="status" defaultValue={searchParams.get("status") ?? "all"}><option value="all">Tous</option><option value="to_watch">À voir</option><option value="in_progress">En cours</option><option value="watched">Vu</option><option value="abandoned">Abandonné</option><option value="not_interested">Pas intéressé</option></select></label>
               <label><span>Ma note</span><select name="personalRating" defaultValue={searchParams.get("personalRating") ?? "all"}><option value="all">Toutes mes notes</option><option value="bad">Mauvais</option><option value="okay">Correct</option><option value="good">Bon</option><option value="very_good">Très bon</option><option value="masterpiece">Chef-d’œuvre</option></select></label>
+              <label><span>Recommandation</span><select name="recommended" defaultValue={searchParams.get("recommended") ?? "all"}><option value="all">Toutes les recommandations</option><option value="true">Recommandé par un ami (Bon et +)</option></select></label>
             </div>
           </Accordion.Panel>
         </Accordion.Item>

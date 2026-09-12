@@ -8,6 +8,7 @@ import { getActiveTmdbProviderIds, getTitleProviderAudioLanguagesForTitles } fro
 import { deduplicateTitles, mapWithConcurrency, titleKey } from "@/lib/explorer/enrichment";
 import { firstExplorerParam, matchesCostFilter, parseExplorerFilters, resolveExactPerson, type ExplorerFiltersData, type SortOption } from "@/lib/explorer/filters";
 import { shouldShowPagination } from "@/lib/pagination";
+import { getFriendRecommendedTitleKeys } from "@/lib/recommendations/friends";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { discoverMovies, discoverTvShows, getCredits, getGenres, getWatchProviders, searchCompanies, searchTitles } from "@/lib/tmdb/catalog";
 import { creditsMatchPerson } from "@/lib/tmdb/details";
@@ -142,12 +143,17 @@ async function getExplorerData(filters: ExplorerFiltersData) {
   const [servicesResult, genres, personalTitlesResult, seasonRatingsResult, searchResult, companiesResult] = await Promise.all([
     supabase.from("streaming_services").select("tmdb_provider_id, name").order("name"),
     Promise.all([getGenres("movie"), getGenres("tv")]),
-    supabase.from("user_titles").select("tmdb_id, media_type, status, rating_label"),
-    supabase.from("user_seasons").select("tmdb_id, season_number, rating_label").not("rating_label", "is", null),
+    user ? supabase.from("user_titles").select("tmdb_id, media_type, status, rating_label") : Promise.resolve({ data: [], error: null }),
+    user ? supabase.from("user_seasons").select("tmdb_id, season_number, rating_label").not("rating_label", "is", null) : Promise.resolve({ data: [], error: null }),
     filters.query ? searchTitles(filters.query, 1) : Promise.resolve(null),
     filters.query ? searchCompanies(filters.query, 1) : Promise.resolve(null),
   ]);
   if (servicesResult.error || personalTitlesResult.error || seasonRatingsResult.error) {
+    console.error("Explorer preference query failed", {
+      services: servicesResult.error?.message ?? null,
+      titles: personalTitlesResult.error?.message ?? null,
+      seasons: seasonRatingsResult.error?.message ?? null,
+    });
     throw new ExplorerDataError("Impossible de charger tes préférences. Réessaie dans quelques instants.");
   }
   const services = servicesResult.data;
@@ -162,6 +168,7 @@ async function getExplorerData(filters: ExplorerFiltersData) {
     throw new ExplorerDataError("Impossible de charger tes services actifs. Réessaie dans quelques instants.");
   }
   const publicFilters = !user && !effectiveFilters.serviceId ? { ...effectiveFilters, allPlatforms: true } : effectiveFilters;
+  const friendRecommendedKeys = filters.recommendedByFriend && user ? await getFriendRecommendedTitleKeys(supabase) : null;
   const providerIds = publicFilters.allPlatforms ? [] : publicFilters.serviceId ? [publicFilters.serviceId] : activeProviderIds;
   const catalog = await getCatalogTitles(providerIds, publicFilters);
   const personalState = new Map((personalTitles ?? []).map((item) => [`${item.media_type}:${item.tmdb_id}`, item]));
@@ -175,7 +182,7 @@ async function getExplorerData(filters: ExplorerFiltersData) {
   const titles = catalog.titles.map((title) => {
     const state = personalState.get(`${title.mediaType}:${title.tmdbId}`);
     return { ...title, status: state?.status ?? null, personalRating: state?.rating_label as CatalogTitleSummary["personalRating"] ?? null, seasonRatings: seasonRatingMap.get(title.tmdbId) ?? [] };
-  }).filter((title) => !filters.status || title.status === filters.status).filter((title) => !filters.personalRating || title.personalRating === filters.personalRating);
+  }).filter((title) => !filters.status || title.status === filters.status).filter((title) => !filters.personalRating || title.personalRating === filters.personalRating).filter((title) => !filters.recommendedByFriend || Boolean(friendRecommendedKeys?.has(`${title.mediaType}:${title.tmdbId}`)));
   const genreOptions = Array.from(new Map(genres.flatMap((result) => result.genres).map((genre) => [genre.id, genre.name])).entries()).sort(([, first], [, second]) => first.localeCompare(second, "fr"));
   return {
     titles,
@@ -196,7 +203,7 @@ async function getExplorerData(filters: ExplorerFiltersData) {
 
 function buildPageUrl(params: Record<string, string | string[] | undefined>, page: number, overrides: Record<string, string> = {}): string {
   const query = new URLSearchParams();
-  for (const key of ["q", "type", "service", "quebec", "genre", "minRating", "year", "sort", "status", "personalRating", "cost", "personId", "personRole", "companyId"]) {
+  for (const key of ["q", "type", "service", "quebec", "genre", "minRating", "year", "sort", "status", "personalRating", "recommended", "cost", "personId", "personRole", "companyId"]) {
     const item = firstExplorerParam(params[key]);
     if (item) query.set(key, item);
   }
@@ -220,7 +227,7 @@ export default async function ExplorerPage({ searchParams }: { searchParams: Sea
     filters.personRole = resolvedPerson.role;
     rawParams.personId = `${resolvedPerson.id}:${resolvedPerson.role}`;
   }
-  const hasActiveFilters = Boolean(filters.query || filters.type !== "all" || filters.serviceId || filters.allPlatforms || filters.genreId || filters.minRating || filters.year || filters.status || filters.personalRating || filters.quebec || filters.cost !== "free" || resolvedPerson || filters.companyId);
+  const hasActiveFilters = Boolean(filters.query || filters.type !== "all" || filters.serviceId || filters.allPlatforms || filters.genreId || filters.minRating || filters.year || filters.status || filters.personalRating || filters.recommendedByFriend || filters.quebec || filters.cost !== "free" || resolvedPerson || filters.companyId);
   return (
       <main className={styles.page}>
         <header className={styles.header}><div><p className={styles.eyebrow}>Canada · Mes plateformes</p><h1>Explorer</h1><p className={styles.intro}>Les films et séries disponibles sur tes services actifs au Canada.</p></div><TextLink className={styles.contextLink} href="/settings">Gérer mes services</TextLink></header>

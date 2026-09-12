@@ -4,9 +4,15 @@ export type Database = {
   public: {
     Tables: {
       profiles: {
-        Row: { id: string; created_at: string };
-        Insert: { id: string; created_at?: string };
-        Update: { id?: string; created_at?: string };
+        Row: { id: string; display_name: string | null; created_at: string };
+        Insert: { id: string; display_name?: string | null; created_at?: string };
+        Update: { id?: string; display_name?: string | null; created_at?: string };
+        Relationships: [];
+      };
+      friend_exclusions: {
+        Row: { user_id: string; excluded_user_id: string; created_at: string };
+        Insert: { user_id: string; excluded_user_id: string; created_at?: string };
+        Update: { user_id?: string; excluded_user_id?: string; created_at?: string };
         Relationships: [];
       };
       streaming_services: {
@@ -74,7 +80,10 @@ export type Database = {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      get_friend_recommended_titles: { Args: Record<string, never>; Returns: Array<{ tmdb_id: number; media_type: "movie" | "tv" }> };
+      list_friend_profiles: { Args: Record<string, never>; Returns: Array<{ id: string; display_name: string | null; is_excluded: boolean }> };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };
