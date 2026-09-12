@@ -16,11 +16,19 @@ function getSignInErrorMessage(error: { code?: string; message: string }): strin
     return "Confirme ton adresse courriel avec le lien reçu avant de te connecter.";
   }
 
+  if (error.code === "over_email_send_rate_limit" || error.code === "email_rate_limit_exceeded" || error.message.toLowerCase().includes("email rate limit") || error.message.toLowerCase().includes("rate limit exceeded")) {
+    return "Supabase a atteint sa limite d’envoi de courriels. Attends un peu avant de redemander une confirmation, ou configure un SMTP personnalisé dans Supabase.";
+  }
+
   return "Adresse courriel ou mot de passe invalide.";
 }
 
 function getSignUpErrorMessage(error: { code?: string; message: string }): string {
   const message = error.message.toLowerCase();
+  if (error.code === "over_email_send_rate_limit" || error.code === "email_rate_limit_exceeded" || message.includes("email rate limit") || message.includes("rate limit exceeded")) {
+    return "La limite d’envoi de courriels de Supabase est atteinte. Attends avant de réessayer, ou configure un SMTP personnalisé dans Supabase.";
+  }
+
   if (error.code === "user_already_exists" || message.includes("already registered") || message.includes("already exists")) {
     return "Un compte existe déjà avec cette adresse courriel.";
   }
@@ -71,7 +79,11 @@ export function LoginForm() {
       const supabase = createSupabaseBrowserClient();
       const result = mode === "signin"
         ? await withTimeout(supabase.auth.signInWithPassword({ email, password }), 15000)
-        : await withTimeout(supabase.auth.signUp({ email, password }), 15000);
+        : await withTimeout(supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=%2Faccount-confirmed` },
+        }), 15000);
 
       if (result.error) {
         setError(mode === "signin" ? getSignInErrorMessage(result.error) : getSignUpErrorMessage(result.error));
@@ -80,7 +92,7 @@ export function LoginForm() {
       }
 
       if (mode === "signup" && !result.data.session) {
-        setMessage("Compte créé. Vérifie ta boîte courriel pour confirmer ton adresse avant de te connecter.");
+        setMessage("Compte créé. Un courriel de confirmation a été envoyé. Clique sur le lien reçu pour terminer la création de ton compte.");
         setIsSubmitting(false);
         return;
       }

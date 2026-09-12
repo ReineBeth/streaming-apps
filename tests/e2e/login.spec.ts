@@ -14,3 +14,9 @@ test("login page can switch to account creation", async ({ page }) => {
   await expect(page.getByRole("heading", { name: /créer un compte/i })).toBeVisible();
   await expect(page.getByLabel(/confirmer le mot de passe/i)).toBeVisible();
 });
+
+test("account confirmation page explains the completed signup", async ({ page }) => {
+  await page.goto("/account-confirmed");
+  await expect(page.getByRole("heading", { name: /compte confirmé/i })).toBeVisible();
+  await expect(page.getByRole("link", { name: /se connecter/i })).toBeVisible();
+});
