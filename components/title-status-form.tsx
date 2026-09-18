@@ -1,11 +1,10 @@
 "use client";
 
-import { updateTitleRating, updateTitleStatus } from "@/app/titles/actions";
 import Link from "next/link";
 import type { PersonalRating, TitleStatus } from "@/types/domain";
-import { useActionState } from "react";
+import type { FormEvent } from "react";
+import { useState, useTransition } from "react";
 
-import { SubmitButton } from "./submit-button";
 import styles from "./title-status-form.module.css";
 
 const statusOptions: Array<{ value: TitleStatus; label: string }> = [
@@ -16,8 +15,42 @@ const ratingOptions: Array<{ value: PersonalRating; label: string }> = [
 ];
 
 export function TitleStatusForm({ tmdbId, mediaType, status, rating, isAuthenticated }: { tmdbId: number; mediaType: "movie" | "tv"; status: TitleStatus | null; rating: PersonalRating | null; isAuthenticated: boolean }) {
-  const [statusState, statusAction] = useActionState(runAction(updateTitleStatus), { error: null });
-  const [ratingState, ratingAction] = useActionState(runAction(updateTitleRating), { error: null });
+  const [currentStatus, setCurrentStatus] = useState<TitleStatus | null>(status);
+  const [currentRating, setCurrentRating] = useState<PersonalRating | null>(rating);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  function submitStatus(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const nextStatus = formData.get("status");
+    if (typeof nextStatus !== "string" || !statusOptions.some((option) => option.value === nextStatus)) return;
+    startTransition(async () => {
+      try {
+        await saveTitleState({ action: "status", tmdbId, mediaType, status: nextStatus });
+        setCurrentStatus(nextStatus as TitleStatus);
+        setError(null);
+      } catch (actionError) {
+        setError(getActionErrorMessage(actionError));
+      }
+    });
+  }
+
+  function submitRating(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const nextRating = formData.get("ratingLabel");
+    if (typeof nextRating !== "string" || !ratingOptions.some((option) => option.value === nextRating)) return;
+    startTransition(async () => {
+      try {
+        await saveTitleState({ action: "rating", tmdbId, mediaType, ratingLabel: nextRating });
+        setCurrentRating(nextRating as PersonalRating);
+        setError(null);
+      } catch (actionError) {
+        setError(getActionErrorMessage(actionError));
+      }
+    });
+  }
 
   if (!isAuthenticated) {
     const nextPath = `/titles/${mediaType}/${tmdbId}`;
@@ -26,34 +59,34 @@ export function TitleStatusForm({ tmdbId, mediaType, status, rating, isAuthentic
 
   return (
     <div className={styles.controls}>
-      <form className={styles.form} action={statusAction}>
+      <form className={styles.form} onSubmit={submitStatus}>
         <input type="hidden" name="tmdbId" value={tmdbId} /><input type="hidden" name="mediaType" value={mediaType} />
         <label htmlFor={`title-status-${mediaType}-${tmdbId}`}>Mon statut</label>
-        <select id={`title-status-${mediaType}-${tmdbId}`} name="status" defaultValue={status ?? ""}><option value="" disabled>Choisir un statut</option>{statusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
-        <SubmitButton>Enregistrer</SubmitButton>
+        <select id={`title-status-${mediaType}-${tmdbId}`} name="status" defaultValue={currentStatus ?? ""}><option value="" disabled>Choisir un statut</option>{statusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
+        <button type="submit" disabled={isPending}>Enregistrer</button>
       </form>
-      {statusState.error && <p className={styles.error} role="alert" aria-live="assertive">{statusState.error}</p>}
-      {status === "watched" && <form className={styles.form} action={ratingAction}>
+      {error && <p className={styles.error} role="alert" aria-live="assertive">{error}</p>}
+      {currentStatus === "watched" && <form className={styles.form} onSubmit={submitRating}>
         <input type="hidden" name="tmdbId" value={tmdbId} /><input type="hidden" name="mediaType" value={mediaType} />
         <label htmlFor={`title-rating-${mediaType}-${tmdbId}`}>Ma note</label>
-        <select id={`title-rating-${mediaType}-${tmdbId}`} name="ratingLabel" defaultValue={rating ?? ""}><option value="" disabled>Choisir une note</option>{ratingOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
-        <SubmitButton pendingLabel="Notation…">Noter</SubmitButton>
+        <select id={`title-rating-${mediaType}-${tmdbId}`} name="ratingLabel" defaultValue={currentRating ?? ""}><option value="" disabled>Choisir une note</option>{ratingOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
+        <button type="submit" disabled={isPending}>Noter</button>
       </form>}
-      {ratingState.error && <p className={styles.error} role="alert" aria-live="assertive">{ratingState.error}</p>}
     </div>
   );
 }
 
-function runAction(action: (formData: FormData) => Promise<void>) {
-  return async (_previousState: { error: string | null }, formData: FormData) => {
-    try {
-      await action(formData);
-      return { error: null };
-    } catch (error) {
-      if (isRedirectError(error)) throw error;
-      return { error: error instanceof Error && error.message.includes("watched") ? "Une note est possible seulement pour un titre marqué comme vu." : "Impossible d'enregistrer. Réessaie dans quelques instants." };
-    }
-  };
+function getActionErrorMessage(error: unknown): string {
+  if (isRedirectError(error)) return "Session expirée. Reconnecte-toi pour continuer.";
+  return error instanceof Error && error.message.includes("watched") ? "Note possible seulement pour un titre marqué comme vu." : "Impossible d enregistrer. Réessaie dans quelques instants.";
+}
+
+async function saveTitleState(payload: Record<string, string | number>): Promise<void> {
+  const response = await fetch("/api/titles/state", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+  if (!response.ok) {
+    const result = await response.json().catch(() => null) as { error?: string } | null;
+    throw new Error(result?.error ?? "Unable to save title state");
+  }
 }
 
 function isRedirectError(error: unknown): boolean {

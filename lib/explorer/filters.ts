@@ -2,6 +2,7 @@ import type { CostFilter, PersonalRating, TitleStatus, WatchProvider } from "@/t
 
 export type ExplorerType = "all" | "movie" | "tv";
 export type SortOption = "popularity" | "rating" | "newest" | "oldest";
+export type ExplorerStatus = TitleStatus | "unwatched" | "no_status";
 
 export interface ExplorerFiltersData {
   query: string;
@@ -12,7 +13,8 @@ export interface ExplorerFiltersData {
   minRating: number | null;
   year: number | null;
   sort: SortOption;
-  status: TitleStatus | null;
+  status: ExplorerStatus | null;
+  hideNotInterested: boolean;
   personalRating: PersonalRating | null;
   recommendedByFriend: boolean;
   cost: CostFilter;
@@ -56,6 +58,7 @@ export function parseExplorerFilters(
   const year = positiveInteger(firstParam(params.year));
   const sort = firstParam(params.sort);
   const status = firstParam(params.status);
+  const hideNotInterested = firstParam(params.hideNotInterested) !== "false";
   const personalRating = firstParam(params.personalRating);
   const recommendedByFriend = firstParam(params.recommended) === "true";
   const cost = firstParam(params.cost);
@@ -71,7 +74,8 @@ export function parseExplorerFilters(
     minRating: Number.isFinite(minRating) && minRating >= 0 && minRating <= 10 ? minRating : null,
     year: year !== null && year >= 1900 && year <= currentYear ? year : null,
     sort: sort === "rating" || sort === "newest" || sort === "oldest" ? sort : "popularity",
-    status: status === "to_watch" || status === "in_progress" || status === "watched" || status === "abandoned" || status === "not_interested" ? status : null,
+    status: status === "to_watch" || status === "in_progress" || status === "watched" || status === "abandoned" || status === "not_interested" || status === "unwatched" || status === "no_status" ? status : null,
+    hideNotInterested,
     personalRating: personalRating === "bad" || personalRating === "okay" || personalRating === "good" || personalRating === "very_good" || personalRating === "masterpiece" ? personalRating : null,
     recommendedByFriend,
     cost: cost === "paid" || cost === "all" ? cost : "free",

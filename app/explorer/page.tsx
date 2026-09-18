@@ -13,7 +13,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { discoverMovies, discoverTvShows, getCredits, getGenres, getWatchProviders, searchCompanies, searchTitles } from "@/lib/tmdb/catalog";
 import { creditsMatchPerson } from "@/lib/tmdb/details";
 import { TmdbApiError } from "@/lib/tmdb/client";
-import type { CatalogTitleSummary } from "@/types/domain";
+import type { CatalogTitleSummary, MediaType, TitleStatus } from "@/types/domain";
 import type { TmdbMovie, TmdbPerson, TmdbTvShow } from "@/types/tmdb";
 
 import styles from "./page.module.css";
@@ -58,12 +58,22 @@ function getExplorerPageRange(page: number, sourcePageSize: number) {
   return { startPage, endPage, offset };
 }
 
-async function getCatalogTitles(providerIds: number[], filters: ExplorerFiltersData) {
+function matchesPersonalStatus(title: TmdbMovie | TmdbTvShow, mediaType: MediaType, filters: ExplorerFiltersData, personalState: Map<string, TitleStatus>) {
+  const status = personalState.get(`${mediaType}:${title.id}`) ?? null;
+  if (filters.status && (filters.status === "unwatched" ? status === "watched" : filters.status === "no_status" ? status !== null : status !== filters.status)) return false;
+  return !filters.hideNotInterested || status !== "not_interested";
+}
+
+async function getCatalogTitles(providerIds: number[], filters: ExplorerFiltersData, personalState: Map<string, TitleStatus>) {
   if (providerIds.length === 0 && !filters.allPlatforms) return { titles: [], totalPages: 1 };
 
   const sourcePageSize = filters.type === "all" && !filters.query ? 40 : 20;
   const { startPage, endPage, offset } = getExplorerPageRange(filters.page, sourcePageSize);
-  const pages = Array.from({ length: endPage - startPage + 1 }, (_, index) => startPage + index);
+  const needsPersonalFiltering = Boolean(filters.status || filters.hideNotInterested);
+  const firstPage = needsPersonalFiltering ? 1 : startPage;
+  const lastPage = needsPersonalFiltering ? Math.min(filters.page * 5, 500) : endPage;
+  const pages = Array.from({ length: lastPage - firstPage + 1 }, (_, index) => firstPage + index);
+  const resultOffset = needsPersonalFiltering ? (filters.page - 1) * EXPLORER_PAGE_SIZE : offset;
 
   if (filters.query && !filters.personId && !filters.companyId) {
     const results = await Promise.all(pages.map((page) => searchTitles(filters.query, page)));
@@ -72,11 +82,12 @@ async function getCatalogTitles(providerIds: number[], filters: ExplorerFiltersD
       .filter((title) => filters.type === "all" || (filters.type === "movie" ? "title" in title : "name" in title))
       .filter((title) => !filters.genreId || title.genre_ids?.includes(filters.genreId))
       .filter((title) => !filters.minRating || title.vote_average >= filters.minRating)
-      .filter((title) => !filters.year || (("title" in title ? title.release_date : title.first_air_date).startsWith(String(filters.year)))) as Array<TmdbMovie | TmdbTvShow>;
+      .filter((title) => !filters.year || (("title" in title ? title.release_date : title.first_air_date).startsWith(String(filters.year))))
+      .filter((title) => matchesPersonalStatus(title as TmdbMovie | TmdbTvShow, "title" in title ? "movie" : "tv", filters, personalState)) as Array<TmdbMovie | TmdbTvShow>;
     searchResults.sort((first, second) => compareTitles(first, second, filters.sort));
     const titles = await enrichTitles(searchResults, providerIds, filters.serviceId, filters.cost);
     const totalResults = results[0]?.total_results ?? 0;
-    return { titles: titles.slice(offset, offset + EXPLORER_PAGE_SIZE), totalPages: Math.max(1, Math.ceil(totalResults / EXPLORER_PAGE_SIZE)) };
+    return { titles: titles.slice(resultOffset, resultOffset + EXPLORER_PAGE_SIZE), totalPages: Math.max(1, Math.ceil(totalResults / EXPLORER_PAGE_SIZE)) };
   }
 
   const discoverOptions = (mediaType: "movie" | "tv") => ({
@@ -94,16 +105,16 @@ async function getCatalogTitles(providerIds: number[], filters: ExplorerFiltersD
 
   if (filters.type === "movie") {
     const results = await Promise.all(pages.map((page) => discoverMovies(providerIds, page, discoverOptions("movie"))));
-    const verifiedTitles = await verifyPersonMatches(results.flatMap((result) => result.results), filters);
+    const verifiedTitles = await verifyPersonMatches(results.flatMap((result) => result.results).filter((title) => matchesPersonalStatus(title, "movie", filters, personalState)), filters);
     const titles = await enrichTitles(verifiedTitles, providerIds, filters.serviceId, filters.cost);
-    return { titles: titles.slice(offset, offset + EXPLORER_PAGE_SIZE), totalPages: Math.max(1, Math.ceil((results[0]?.total_results ?? 0) / EXPLORER_PAGE_SIZE)) };
+    return { titles: titles.slice(resultOffset, resultOffset + EXPLORER_PAGE_SIZE), totalPages: Math.max(1, Math.ceil((results[0]?.total_results ?? 0) / EXPLORER_PAGE_SIZE)) };
   }
 
   if (filters.type === "tv") {
     const results = await Promise.all(pages.map((page) => discoverTvShows(providerIds, page, discoverOptions("tv"))));
-    const verifiedTitles = await verifyPersonMatches(results.flatMap((result) => result.results), filters);
+    const verifiedTitles = await verifyPersonMatches(results.flatMap((result) => result.results).filter((title) => matchesPersonalStatus(title, "tv", filters, personalState)), filters);
     const titles = await enrichTitles(verifiedTitles, providerIds, filters.serviceId, filters.cost);
-    return { titles: titles.slice(offset, offset + EXPLORER_PAGE_SIZE), totalPages: Math.max(1, Math.ceil((results[0]?.total_results ?? 0) / EXPLORER_PAGE_SIZE)) };
+    return { titles: titles.slice(resultOffset, resultOffset + EXPLORER_PAGE_SIZE), totalPages: Math.max(1, Math.ceil((results[0]?.total_results ?? 0) / EXPLORER_PAGE_SIZE)) };
   }
 
   const blocks = await Promise.all(pages.map(async (page) => {
@@ -114,10 +125,10 @@ async function getCatalogTitles(providerIds: number[], filters: ExplorerFiltersD
     return { movies, shows };
   }));
   const allTitles = blocks.flatMap(({ movies, shows }) => [...movies.results, ...shows.results]);
-  const verifiedTitles = await verifyPersonMatches(allTitles, filters);
+  const verifiedTitles = await verifyPersonMatches(allTitles.filter((title) => matchesPersonalStatus(title, "title" in title ? "movie" : "tv", filters, personalState)), filters);
   const titles = await enrichTitles(verifiedTitles, providerIds, filters.serviceId, filters.cost);
   const totalResults = (blocks[0]?.movies.total_results ?? 0) + (blocks[0]?.shows.total_results ?? 0);
-  return { titles: titles.slice(offset, offset + EXPLORER_PAGE_SIZE), totalPages: Math.max(1, Math.ceil(totalResults / EXPLORER_PAGE_SIZE)) };
+  return { titles: titles.slice(resultOffset, resultOffset + EXPLORER_PAGE_SIZE), totalPages: Math.max(1, Math.ceil(totalResults / EXPLORER_PAGE_SIZE)) };
 }
 
 function getSortBy(sort: SortOption, mediaType: "movie" | "tv"): string {
@@ -159,6 +170,7 @@ async function getExplorerData(filters: ExplorerFiltersData) {
   const services = servicesResult.data;
   const personalTitles = personalTitlesResult.data;
   const seasonRatings = seasonRatingsResult.data;
+  const personalState = new Map((personalTitles ?? []).map((item) => [`${item.media_type}:${item.tmdb_id}`, item.status as TitleStatus]));
   const exactPerson = !filters.personId && searchResult ? resolveExactPerson(filters.query, searchResult.results.filter((result): result is TmdbPerson => result.media_type === "person")) : null;
   const effectiveFilters = exactPerson ? { ...filters, personId: exactPerson.id, personRole: exactPerson.role } : filters;
   let activeProviderIds: number[];
@@ -170,8 +182,7 @@ async function getExplorerData(filters: ExplorerFiltersData) {
   const publicFilters = !user && !effectiveFilters.serviceId ? { ...effectiveFilters, allPlatforms: true } : effectiveFilters;
   const friendRecommendedKeys = filters.recommendedByFriend && user ? await getFriendRecommendedTitleKeys(supabase) : null;
   const providerIds = publicFilters.allPlatforms ? [] : publicFilters.serviceId ? [publicFilters.serviceId] : activeProviderIds;
-  const catalog = await getCatalogTitles(providerIds, publicFilters);
-  const personalState = new Map((personalTitles ?? []).map((item) => [`${item.media_type}:${item.tmdb_id}`, item]));
+  const catalog = await getCatalogTitles(providerIds, publicFilters, personalState);
   const seasonRatingMap = new Map<number, Array<{ seasonNumber: number; rating: NonNullable<CatalogTitleSummary["personalRating"]> }>>();
   for (const season of seasonRatings ?? []) {
     if (!season.rating_label) continue;
@@ -180,9 +191,9 @@ async function getExplorerData(filters: ExplorerFiltersData) {
     seasonRatingMap.set(season.tmdb_id, ratings);
   }
   const titles = catalog.titles.map((title) => {
-    const state = personalState.get(`${title.mediaType}:${title.tmdbId}`);
+    const state = personalTitles?.find((item) => item.media_type === title.mediaType && item.tmdb_id === title.tmdbId);
     return { ...title, status: state?.status ?? null, personalRating: state?.rating_label as CatalogTitleSummary["personalRating"] ?? null, seasonRatings: seasonRatingMap.get(title.tmdbId) ?? [] };
-  }).filter((title) => !filters.status || title.status === filters.status).filter((title) => !filters.personalRating || title.personalRating === filters.personalRating).filter((title) => !filters.recommendedByFriend || Boolean(friendRecommendedKeys?.has(`${title.mediaType}:${title.tmdbId}`)));
+  }).filter((title) => !filters.status || (filters.status === "unwatched" ? title.status !== "watched" : filters.status === "no_status" ? title.status === null : title.status === filters.status)).filter((title) => !filters.hideNotInterested || title.status !== "not_interested").filter((title) => !filters.personalRating || title.personalRating === filters.personalRating).filter((title) => !filters.recommendedByFriend || Boolean(friendRecommendedKeys?.has(`${title.mediaType}:${title.tmdbId}`)));
   const genreOptions = Array.from(new Map(genres.flatMap((result) => result.genres).map((genre) => [genre.id, genre.name])).entries()).sort(([, first], [, second]) => first.localeCompare(second, "fr"));
   return {
     titles,
@@ -203,7 +214,7 @@ async function getExplorerData(filters: ExplorerFiltersData) {
 
 function buildPageUrl(params: Record<string, string | string[] | undefined>, page: number, overrides: Record<string, string> = {}): string {
   const query = new URLSearchParams();
-  for (const key of ["q", "type", "service", "quebec", "genre", "minRating", "year", "sort", "status", "personalRating", "recommended", "cost", "personId", "personRole", "companyId"]) {
+  for (const key of ["q", "type", "service", "quebec", "genre", "minRating", "year", "sort", "status", "hideNotInterested", "personalRating", "recommended", "cost", "personId", "personRole", "companyId"]) {
     const item = firstExplorerParam(params[key]);
     if (item) query.set(key, item);
   }
@@ -227,7 +238,7 @@ export default async function ExplorerPage({ searchParams }: { searchParams: Sea
     filters.personRole = resolvedPerson.role;
     rawParams.personId = `${resolvedPerson.id}:${resolvedPerson.role}`;
   }
-  const hasActiveFilters = Boolean(filters.query || filters.type !== "all" || filters.serviceId || filters.allPlatforms || filters.genreId || filters.minRating || filters.year || filters.status || filters.personalRating || filters.recommendedByFriend || filters.quebec || filters.cost !== "free" || resolvedPerson || filters.companyId);
+  const hasActiveFilters = Boolean(filters.query || filters.type !== "all" || filters.serviceId || filters.allPlatforms || filters.genreId || filters.minRating || filters.year || filters.status || filters.hideNotInterested || filters.personalRating || filters.recommendedByFriend || filters.quebec || filters.cost !== "free" || resolvedPerson || filters.companyId);
   return (
       <main className={styles.page}>
         <header className={styles.header}><div><p className={styles.eyebrow}>Canada · Mes plateformes</p><h1>Explorer</h1><p className={styles.intro}>Les films et séries disponibles sur tes services actifs au Canada.</p></div><TextLink className={styles.contextLink} href="/settings">Gérer mes services</TextLink></header>

@@ -41,6 +41,7 @@ describe("parseExplorerFilters", () => {
       year: 2024,
       sort: "newest",
       status: "watched",
+      hideNotInterested: true,
       personalRating: "good",
       recommendedByFriend: true,
       cost: "free",
@@ -50,6 +51,19 @@ describe("parseExplorerFilters", () => {
       companyId: null,
       page: 500,
     });
+  });
+
+  it("accepts the unwatched and no-status filters", () => {
+    const filters = parseExplorerFilters({ status: "unwatched", hideNotInterested: "true" });
+
+    expect(filters.status).toBe("unwatched");
+    expect(filters.hideNotInterested).toBe(true);
+    expect(parseExplorerFilters({ status: "no_status" }).status).toBe("no_status");
+  });
+
+  it("hides uninterested titles by default while allowing them to be shown", () => {
+    expect(parseExplorerFilters({}).hideNotInterested).toBe(true);
+    expect(parseExplorerFilters({ hideNotInterested: "false" }).hideNotInterested).toBe(false);
   });
 
   it("accepts the free, paid and all availability filters", () => {
