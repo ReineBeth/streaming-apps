@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import type { CatalogTitleSummary } from "@/types/domain";
@@ -25,6 +26,7 @@ const statusLabels = {
 
 export function MediaCard({ title, priority = false, onDismiss, isAuthenticated = true }: { title: CatalogTitleSummary; priority?: boolean; onDismiss?: () => void; isAuthenticated?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
   const cardButtonRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -49,6 +51,7 @@ export function MediaCard({ title, priority = false, onDismiss, isAuthenticated 
 
   function closeModal() {
     dialogRef.current?.close();
+    router.refresh();
   }
 
   return (
@@ -84,7 +87,7 @@ export function MediaCard({ title, priority = false, onDismiss, isAuthenticated 
                 <h2 id={`title-${title.mediaType}-${title.tmdbId}`}>{title.title}</h2>
                 <p className={styles.modalRating}>★ {title.tmdbRating?.toFixed(1) ?? "—"} / 10 TMDB</p>
                 <p id={`description-${title.mediaType}-${title.tmdbId}`} className={styles.overview}>{title.overview || "Aucune description disponible."}</p>
-                <TitleStatusForm key={`${title.mediaType}-${title.tmdbId}-${title.status ?? "none"}`} tmdbId={title.tmdbId} mediaType={title.mediaType} status={title.status} rating={title.personalRating} isAuthenticated={isAuthenticated} />
+                <TitleStatusForm tmdbId={title.tmdbId} mediaType={title.mediaType} status={title.status} rating={title.personalRating} isAuthenticated={isAuthenticated} />
               </div>
             </div>
             <Link className={styles.detailsLink} href={`/titles/${title.mediaType}/${title.tmdbId}`} onClick={closeModal}>{title.mediaType === "tv" ? "Ouvrir le suivi des saisons" : "Voir la fiche complète"}</Link>
